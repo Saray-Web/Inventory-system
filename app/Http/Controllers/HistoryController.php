@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\category;
-use App\Models\stockIn;
-use App\Models\stockOut;
+use App\Models\Category;
+use App\Models\StockIn;
+use App\Models\StockOut;
 use Illuminate\Http\Request;
 
 class HistoryController extends Controller
@@ -16,9 +16,9 @@ class HistoryController extends Controller
     {
 
         // $categories = category::latest()->get();
-        $totalTransactions = stockOut::count() + stockIn::count();
-        $Total_Stock_In_Transactions = stockIn::count();
-        $Total_Stock_Out_Transactions = stockOut::count();
+        $totalTransactions = StockOut::count() + StockIn::count();
+        $Total_Stock_In_Transactions = StockIn::count();
+        $Total_Stock_Out_Transactions = StockOut::count();
 
         return view('history.index', compact(
             'totalTransactions',

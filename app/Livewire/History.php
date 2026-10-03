@@ -2,8 +2,8 @@
 
 namespace App\Livewire;
 
-use App\Models\stockIn;
-use App\Models\stockOut;
+use App\Models\StockIn;
+use App\Models\StockOut;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Livewire\Component;
 use Livewire\WithPagination;

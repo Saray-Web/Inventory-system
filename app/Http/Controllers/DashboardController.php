@@ -2,25 +2,25 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\category;
-use App\Models\product;
-use App\Models\stockIn;
-use App\Models\stockOut;
+use App\Models\Category;
+use App\Models\Product;
+use App\Models\StockIn;
+use App\Models\StockOut;
 use Illuminate\Http\Request;
 
-class dashboardController extends Controller
+class DashboardController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
-        $totalCategories = category::count();
-        $totalProducts = product::count();
-        $totalStockIn = stockIn::sum('quantity');
-        $totalStockOut = stockOut::sum('quantity');
-        $CurrentStock = product::sum('quantity');
-        $loweStock = product::whereColumn('quantity', '<=', 'minimum_stock')->count();
+        $totalCategories = Category::count();
+        $totalProducts = Product::count();
+        $totalStockIn = StockIn::sum('quantity');
+        $totalStockOut = StockOut::sum('quantity');
+        $CurrentStock = Product::sum('quantity');
+        $loweStock = Product::whereColumn('quantity', '<=', 'minimum_stock')->count();
         return view('Dashboards.index', compact(
             'totalCategories',
             'totalProducts',

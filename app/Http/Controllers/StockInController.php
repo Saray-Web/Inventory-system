@@ -2,20 +2,20 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\product;
-use App\Models\stockIn;
+use App\Models\Product;
+use App\Models\StockIn;
 use Illuminate\Http\Request;
 
-class stockInController extends Controller
+class StockInController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
-        $stockIns = stockIn::with('product')->latest()->paginate(5);
+        $stockIns = StockIn::with('product')->latest()->paginate(5);
 
-        $latestStockIn = stockIn::with('product')->get()->first();
+        $latestStockIn = StockIn::with('product')->get()->first();
         return view('stock-in.index', compact('stockIns', 'latestStockIn'));
     }
 
@@ -24,7 +24,7 @@ class stockInController extends Controller
      */
     public function create()
     {
-        $products = product::orderBy('name')->get();
+        $products = Product::orderBy('name')->get();
         return view('stock-in.create', compact('products'));
     }
 
@@ -41,13 +41,13 @@ class stockInController extends Controller
 
         $referenceNo = $this->generateReferenceNo();
         
-        stockIn::create([
+        StockIn::create([
             'product_id' => $request->product_id,
             'quantity' => $request->quantity,
             'note' => $request->note,
             'reference_no' => $referenceNo,
         ]);
-        $product = product::findOrFail($request->product_id);
+        $product = Product::findOrFail($request->product_id);
         $product->increment('quantity', $request->quantity);
         return redirect()->route('stockIn.index')->with('success', 'Created stock successfull');
     }
@@ -57,7 +57,7 @@ class stockInController extends Controller
         $date = now()->format('Ymd');
         $prefix = 'SI-' . $date . '-';
 
-        $latest = stockIn::where('reference_no', 'LIKE', $prefix . '%')
+        $latest = StockIn::where('reference_no', 'LIKE', $prefix . '%')
             ->latest('id')
             ->first();
 

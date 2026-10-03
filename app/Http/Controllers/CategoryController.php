@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\category;
-use App\Models\product;
+use App\Models\Category;
+use App\Models\Product;
 use Illuminate\Http\Request;
 
 class CategoryController extends Controller
@@ -13,7 +13,7 @@ class CategoryController extends Controller
      */
     public function index()
     {
-        $categories = category::withCount('products')->latest()->get();
+        $categories = Category::withCount('products')->latest()->get();
        
         return view('categories.index', compact('categories'));
     }
@@ -37,7 +37,7 @@ class CategoryController extends Controller
             'is_active' => 'required|boolean'
         ]);
 
-        category::create([
+        Category::create([
             'name' => $request->name,
             'description' => $request->description,
             'is_active' => $request->is_active,
@@ -57,7 +57,7 @@ class CategoryController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(category $category)
+    public function edit(Category $category)
     {
         return view('categories.edit', compact('category'));
     }
@@ -65,7 +65,7 @@ class CategoryController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, category $category)
+    public function update(Request $request, Category $category)
     {
         $request->validate([
             'name' => "required|string|max:255|unique:categories,name," .$category->id,
@@ -85,7 +85,7 @@ class CategoryController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(category $category)
+    public function destroy(Category $category)
     {
         $category->delete();
         return redirect()->route('categories.index')->with('success', 'Deleted successfull');

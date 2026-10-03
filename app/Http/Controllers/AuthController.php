@@ -6,7 +6,7 @@ use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
-class Authcontroller extends Controller
+class AuthController extends Controller
 {
     public function loginform()
     {

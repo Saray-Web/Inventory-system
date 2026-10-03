@@ -172,7 +172,7 @@
                                 <p class="mt-1 text-xs text-slate-400">PNG, JPG, GIF up to 10MB</p>
                             </div>
 
-                            <input type="file" id="imageInput" name="image" accept="image/*" class="absolute inset-0 cursor-pointer opacity-0" onchange="previewImage(event)">
+                            <input required type="file" id="imageInput" name="image" accept="image/*" class="absolute inset-0 cursor-pointer opacity-0" onchange="previewImage(event)">
                         </div>
 
                         @error('image')

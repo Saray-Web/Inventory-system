@@ -1,12 +1,12 @@
 <?php
 
-use App\Http\Controllers\Authcontroller;
+use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CategoryController;
-use App\Http\Controllers\dashboardController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\HistoryController;
-use App\Http\Controllers\productController;
-use App\Http\Controllers\stockInController;
-use App\Http\Controllers\stockOutController;
+use App\Http\Controllers\ProductController;
+use App\Http\Controllers\StockInController;
+use App\Http\Controllers\StockOutController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -19,31 +19,29 @@ use Illuminate\Support\Facades\Route;
 | be assigned to the "web" middleware group. Make something great!
 |
 */
-// Route::controller(Authcontroller::class)->group(function(){
+// Route::controller(AuthController::class)->group(function(){
 //     Route::get('/login', 'loginform')->name('loginform');
 // });
-// Route::get('/login', [ Authcontroller::class, 'loginform'])->name('loginform');
-// Route::post('/login', [Authcontroller::class, 'login'])->name('login.submit');
-// Route::post('/logout', [Authcontroller::class, 'logout'])->name('logout');
+// Route::get('/login', [ AuthController::class, 'loginform'])->name('loginform');
+// Route::post('/login', [AuthController::class, 'login'])->name('login.submit');
+// Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 Route::get('/', function(){
     return redirect()->route('loginform');
 });
 
-Route::controller(Authcontroller::class)->group(function (){
+Route::controller(AuthController::class)->group(function (){
     Route::get('/login', 'loginform')->name('loginform');
     Route::post('/login', 'login')->name('form.submit');
     Route::post('/logout', 'logout')->name('logout');
 });
 
 Route::middleware('admin.auth')->group(function(){
-    Route::get('/dashboard', [dashboardController::class, 'index'])->name("dashboard.index");
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name("dashboard.index");
     Route::resource('categories', CategoryController::class);
-    Route::resource('product', productController::class);
-    Route::resource('stockIn', stockInController::class);
-    Route::resource('stockOut', stockOutController::class);
+    Route::resource('product', ProductController::class);
+    Route::resource('stockIn', StockInController::class);
+    Route::resource('stockOut', StockOutController::class);
     
     Route::get('/history', [HistoryController::class, 'index']) -> name('history.index');
 
 });
-
-

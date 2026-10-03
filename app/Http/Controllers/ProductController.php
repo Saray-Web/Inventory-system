@@ -2,22 +2,22 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\product;
-use App\Models\category;
+use App\Models\Product;
+use App\Models\Category;
 use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
 use Illuminate\Http\Request;
 
-class productController extends Controller
+class ProductController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
     public function index(Request $request)
     {
-        $categories = category::orderBy('name')->get();
-        $totalProducts = product::count();
+        $categories = Category::orderBy('name')->get();
+        $totalProducts = Product::count();
 
-        $query = product::with('category');
+        $query = Product::with('category');
 
         if($request->filled('category')){
             
@@ -32,7 +32,7 @@ class productController extends Controller
      */
     public function create()
     {
-        $categories = category::where('is_active', true)->orderBy('name')->get();
+        $categories = Category::where('is_active', true)->orderBy('name')->get();
         return view('products.create', compact('categories'));
     }
 
@@ -64,7 +64,7 @@ class productController extends Controller
             $publicId = $upload['public_id'];
         }
 
-        product::create([
+        Product::create([
             'category_id' => $request->category_id,
             'name' => $request->name,
             'sku' => $request->sku,
@@ -90,14 +90,14 @@ class productController extends Controller
      */
     public function edit(product $product)
     {
-        $categories = category::where('is_active', true)->orderBy('name')->get();
+        $categories = Category::where('is_active', true)->orderBy('name')->get();
         return view('products.edit', compact('categories', 'product'));
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, product $product)
+    public function update(Request $request, Product $product)
     {
         $request->validate([
             'category_id' => 'required|exists:categories,id',
@@ -148,7 +148,7 @@ class productController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(product $product)
+    public function destroy(Product $product)
     {
         $hasStockHistory =
             // $product->stockIns()->exists() ||

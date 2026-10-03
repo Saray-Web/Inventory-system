@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\product;
-use App\Models\stockOut;
+use App\Models\Product;
+use App\Models\StockOut;
 use Illuminate\Http\Request;
 
-class stockOutController extends Controller
+class StockOutController extends Controller
 {
     /**
      * Display a listing of the resource.
@@ -43,7 +43,7 @@ class stockOutController extends Controller
      */
     public function create()
     {
-        $products = product::where('is_active', true)
+        $products = Product::where('is_active', true)
             ->where('quantity', '>', 0)
             ->orderBy('name')
             ->get();
@@ -62,7 +62,7 @@ class stockOutController extends Controller
             'note' => 'nullable|string'
         ]);
 
-        $product = product::findOrFail($request->product_id);
+        $product = Product::findOrFail($request->product_id);
         // Check stock before stock out
         if ($request->quantity > $product->quantity) {
             return back()
@@ -73,7 +73,7 @@ class stockOutController extends Controller
         }
         $referenceNo = $this->generateReferenceNo();
         // Create stock out record
-        stockOut::create([
+        StockOut::create([
             'reference_no' => $referenceNo,
             'product_id' => $request->product_id,
             'quantity' => $request->quantity,
@@ -93,7 +93,7 @@ class stockOutController extends Controller
         $date = now()->format('Ymd');
         $prefix = 'SO-' . $date . '-';
 
-        $latest = stockOut::where('reference_no', 'LIKE', $prefix . '%')
+        $latest = StockOut::where('reference_no', 'LIKE', $prefix . '%')
             ->latest('id')
             ->first();
 
