@@ -1,0 +1,33 @@
+@extends('layouts.app')
+
+@section('page-title', 'Issue Stock Out')
+
+@section('content')
+    <div class="mx-auto max-w-5xl space-y-6">
+        <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+            <div class="flex items-start gap-3">
+                <a href="{{ route('stockOut.index') }}" aria-label="Back to Stock Out" class="mt-0.5 grid h-10 w-10 shrink-0 place-items-center rounded-xl border border-slate-200 bg-white text-slate-500 shadow-sm transition hover:-translate-x-0.5 hover:border-rose-200 hover:bg-rose-50 hover:text-rose-600"><i data-lucide="arrow-left" class="h-4 w-4"></i></a>
+                <div><p class="text-xs font-bold uppercase tracking-[0.14em] text-rose-600">Inventory movement</p><h1 class="mt-1 text-2xl font-bold tracking-tight text-slate-900">Issue stock out</h1><p class="mt-1 text-sm text-slate-500">Record products leaving your inventory.</p></div>
+            </div>
+            <div class="inline-flex items-center gap-2 self-start rounded-full border border-amber-200 bg-amber-50 px-3 py-1.5 text-xs font-semibold text-amber-700 sm:self-auto"><i data-lucide="triangle-alert" class="h-3.5 w-3.5"></i> Stock will be reduced</div>
+        </div>
+
+        @if ($errors->any())
+            <div class="flex gap-3 rounded-2xl border border-rose-200 bg-rose-50 p-4 text-rose-800"><i data-lucide="circle-alert" class="mt-0.5 h-5 w-5 shrink-0 text-rose-600"></i><div class="text-sm"><p class="font-bold">Please review the form.</p><ul class="mt-1 list-inside list-disc space-y-0.5 text-rose-700">@foreach ($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul></div></div>
+        @endif
+
+        <form action="{{ route('stockOut.store') }}" method="POST" class="grid overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-[0_1px_2px_rgb(15_23_42/0.04),0_12px_28px_rgb(15_23_42/0.05)] lg:grid-cols-[1fr_17rem]">
+            @csrf
+            <div class="p-5 sm:p-7">
+                <div class="mb-7 flex items-center gap-3 border-b border-slate-100 pb-5"><span class="grid h-10 w-10 place-items-center rounded-xl bg-rose-50 text-rose-600"><i data-lucide="package-minus" class="h-5 w-5"></i></span><div><h2 class="font-bold text-slate-900">Stock out details</h2><p class="mt-0.5 text-sm text-slate-500">Choose an item and the quantity to issue.</p></div></div>
+                <div class="grid gap-5 sm:grid-cols-5">
+                    <div class="sm:col-span-3"><label for="product_id" class="mb-2 block text-sm font-semibold text-slate-700">Product <span class="text-rose-500">*</span></label><div class="relative"><i data-lucide="package" class="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"></i><select id="product_id" name="product_id" required class="w-full appearance-none rounded-xl border {{ $errors->has('product_id') ? 'border-rose-400' : 'border-slate-200' }} bg-white py-3 pl-10 pr-10 text-sm text-slate-700 outline-none ring-4 ring-transparent transition focus:border-rose-500 focus:ring-rose-500/10"><option value="" disabled {{ old('product_id') ? '' : 'selected' }}>Select a product</option>@foreach($products as $product)<option value="{{ $product->id }}" {{ old('product_id') == $product->id ? 'selected' : '' }}>{{ $product->name }} · {{ $product->quantity }} available</option>@endforeach</select><i data-lucide="chevron-down" class="pointer-events-none absolute right-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"></i></div>@error('product_id')<p class="mt-1.5 text-xs font-medium text-rose-600">{{ $message }}</p>@enderror</div>
+                    <div class="sm:col-span-2"><label for="quantity" class="mb-2 block text-sm font-semibold text-slate-700">Quantity <span class="text-rose-500">*</span></label><div class="relative"><input type="number" id="quantity" name="quantity" min="1" value="{{ old('quantity', 1) }}" required class="w-full rounded-xl border {{ $errors->has('quantity') ? 'border-rose-400' : 'border-slate-200' }} bg-white py-3 pl-4 pr-10 text-sm text-slate-700 outline-none ring-4 ring-transparent transition focus:border-rose-500 focus:ring-rose-500/10"><i data-lucide="hash" class="pointer-events-none absolute right-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"></i></div>@error('quantity')<p class="mt-1.5 text-xs font-medium text-rose-600">{{ $message }}</p>@enderror</div>
+                </div>
+                <div class="mt-5"><label for="note" class="mb-2 block text-sm font-semibold text-slate-700">Note <span class="font-normal text-slate-400">(optional)</span></label><textarea id="note" name="note" rows="4" placeholder="Example: Customer order #1024 or damaged stock" class="block w-full resize-none rounded-xl border border-slate-200 bg-white p-3 text-sm text-slate-700 outline-none ring-4 ring-transparent transition placeholder:text-slate-400 focus:border-rose-500 focus:ring-rose-500/10">{{ old('note') }}</textarea></div>
+            </div>
+            <aside class="border-t border-slate-200 bg-slate-50 p-5 lg:border-l lg:border-t-0 lg:p-7"><div class="rounded-2xl border border-rose-100 bg-rose-50 p-4"><i data-lucide="shield-alert" class="h-5 w-5 text-rose-600"></i><h3 class="mt-3 text-sm font-bold text-rose-900">Check before issuing</h3><p class="mt-1.5 text-xs leading-5 text-rose-700">This action permanently deducts the entered quantity from the selected product's available stock.</p></div><div class="mt-5 space-y-3 text-sm text-slate-600"><div class="flex gap-2.5"><i data-lucide="check-circle-2" class="h-4 w-4 shrink-0 text-emerald-500"></i><span>Confirm the product is correct.</span></div><div class="flex gap-2.5"><i data-lucide="check-circle-2" class="h-4 w-4 shrink-0 text-emerald-500"></i><span>Enter only the quantity leaving stock.</span></div><div class="flex gap-2.5"><i data-lucide="check-circle-2" class="h-4 w-4 shrink-0 text-emerald-500"></i><span>Add a note for easier tracking.</span></div></div></aside>
+            <div class="col-span-full flex flex-col-reverse gap-3 border-t border-slate-100 bg-white px-5 py-4 sm:flex-row sm:items-center sm:justify-end sm:px-7"><a href="{{ route('stockOut.index') }}" class="inline-flex justify-center rounded-xl border border-slate-200 px-5 py-2.5 text-sm font-semibold text-slate-600 transition hover:bg-slate-50">Cancel</a><button type="submit" class="inline-flex items-center justify-center gap-2 rounded-xl bg-rose-600 px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-rose-600/20 transition hover:-translate-y-0.5 hover:bg-rose-700 focus:outline-none focus:ring-4 focus:ring-rose-500/20"><i data-lucide="package-minus" class="h-4 w-4"></i> Issue stock out</button></div>
+        </form>
+    </div>
+@endsection

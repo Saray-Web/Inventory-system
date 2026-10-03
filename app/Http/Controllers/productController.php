@@ -1,0 +1,183 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\product;
+use App\Models\category;
+use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
+use Illuminate\Http\Request;
+
+class productController extends Controller
+{
+    /**
+     * Display a listing of the resource.
+     */
+    public function index(Request $request)
+    {
+        $categories = category::orderBy('name')->get();
+        $totalProducts = product::count();
+
+        $query = product::with('category');
+
+        if($request->filled('category')){
+            
+            $query->where('category_id', $request->category);
+        }
+        $products = $query->latest()->paginate(5)->withQueryString();
+        return view('products.index', compact('products', 'totalProducts', 'categories'));
+    }
+
+    /**
+     * Show the form for creating a new resource.
+     */
+    public function create()
+    {
+        $categories = category::where('is_active', true)->orderBy('name')->get();
+        return view('products.create', compact('categories'));
+    }
+
+    /**
+     * Store a newly created resource in storage.
+     */
+    public function store(Request $request)
+    {
+        $request->validate([
+            'category_id' => 'required|exists:categories,id',
+            'name' => 'required|string|max:255',
+            'sku' => 'required|string|max:255|unique:products,sku',
+            'price' => 'required|numeric|min:0',
+            'minimum_stock' => 'required|integer|min:0',
+            'description' => 'nullable|string',
+            'image' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+        ]);
+
+        $imageUrl = null;
+        $publicId = null;
+        if ($request->hasFile('image')) {
+            $upload = Cloudinary::uploadApi()->upload(
+                $request->file('image')->getRealPath(),
+                [
+                    'folder' => 'inventory system'
+                ]
+            );
+            $imageUrl = $upload['secure_url'];
+            $publicId = $upload['public_id'];
+        }
+
+        product::create([
+            'category_id' => $request->category_id,
+            'name' => $request->name,
+            'sku' => $request->sku,
+            'price' => $request->price,
+            'quantity' => 0,
+            'minimum_stock' => $request->minimum_stock,
+            'description' => $request->description,
+            'image' => $imageUrl,
+            'image_public_id' => $publicId,
+        ]);
+        return redirect()->route('product.index')->with('success', 'Created products success');
+    }
+    /**
+     * Display the specified resource.
+     */
+    public function show(string $id)
+    {
+        //
+    }
+
+    /**
+     * Show the form for editing the specified resource.
+     */
+    public function edit(product $product)
+    {
+        $categories = category::where('is_active', true)->orderBy('name')->get();
+        return view('products.edit', compact('categories', 'product'));
+    }
+
+    /**
+     * Update the specified resource in storage.
+     */
+    public function update(Request $request, product $product)
+    {
+        $request->validate([
+            'category_id' => 'required|exists:categories,id',
+            'name' => 'required|string|max:255',
+            'sku' => 'required|string|max:255|unique:products,sku,' . $product->id,
+            'price' => 'required|numeric|min:0',
+            'quantity' => 'required|integer|min:0',
+            'minimum_stock' => 'required|integer|min:0',
+            'description' => 'nullable|string',
+            'image' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+        ]);
+
+        $imageUrl = $product->image;
+        $publicId = $product->image_public_id;
+
+        if ($request->hasFile('image')) {
+            // delete old image
+            if ($product->image_public_id) {
+                Cloudinary::uploadApi()->destroy($product->image_public_id);
+            }
+
+            // for upload new image
+            $upload = Cloudinary::uploadApi()->upload(
+                $request->file('image')->getRealPath(),
+                [
+                    'folder' => 'inventory system'
+                ]
+            );
+            $imageUrl = $upload['secure_url'];
+            $publicId = $upload['public_id'];
+        }
+
+        $product->update([
+            'category_id' => $request->category_id,
+            'name' => $request->name,
+            'sku' => $request->sku,
+            'price' => $request->price,
+            'quantity' => $request->quantity,
+            'minimum_stock' => $request->minimum_stock,
+            'description' => $request->description,
+            'image' => $imageUrl,
+            'image_public_id' => $publicId,
+
+        ]);
+        return redirect()->route('product.index')->with('success', 'Updated product successfull');
+    }
+
+    /**
+     * Remove the specified resource from storage.
+     */
+    public function destroy(product $product)
+    {
+        $hasStockHistory =
+            // $product->stockIns()->exists() ||
+            // $product->stockOuts()->exists();
+            $product->stockIn()->exists() || $product->stockOut()->exists();
+
+        // Product មាន history → Deactivate only
+        if ($hasStockHistory) {
+
+            $product->update([
+                'is_active' => false,
+            ]);
+
+            return redirect()
+                ->route('product.index')
+                ->with('success', 'Product deactivated successfully.');
+        }
+
+        // Product គ្មាន history → Delete image
+        if ($product->image_public_id) {
+            Cloudinary::uploadApi()->destroy(
+                $product->image_public_id
+            );
+        }
+
+        $product->delete();
+
+        return redirect()
+            ->route('product.index')
+            ->with('success', 'Product deleted successfully.');
+    }
+}
