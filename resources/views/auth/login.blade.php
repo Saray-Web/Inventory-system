@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,7 +7,6 @@
     <script src="https://unpkg.com/lucide@latest"></script>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-
 <body class="min-h-screen bg-slate-100 font-sans text-slate-800 antialiased">
     <main class="flex min-h-screen items-center justify-center px-4 py-10">
         <section
@@ -40,7 +38,6 @@
                             <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
                     @enderror
                 </div>
-
                 <div>
                     <div class="mb-2 flex items-center justify-between">
                         <label for="password" class="block text-sm font-semibold text-slate-700">Password</label>
@@ -80,7 +77,6 @@
             </div>
         </section>
     </main>
-
     <script>
         lucide.createIcons();
         const toggle = document.getElementById('passwordToggle');

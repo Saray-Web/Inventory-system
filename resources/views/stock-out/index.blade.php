@@ -156,7 +156,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="6" class="px-6 py-16 text-center">
+                                <td colspan="7" class="px-6 py-16 text-center">
                                     <div class="flex flex-col items-center">
                                         <div
                                             class="grid h-16 w-16 place-items-center rounded-2xl bg-slate-100 text-slate-400">

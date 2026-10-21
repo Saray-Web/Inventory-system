@@ -220,7 +220,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="6" class="px-6 py-16 text-center">
+                                <td colspan="7" class="px-6 py-16 text-center">
                                     <div class="flex flex-col items-center">
                                         <div
                                             class="grid h-16 w-16 place-items-center
@@ -246,7 +246,6 @@
                     <p> Page {{ $stockIns->currentPage() }} of {{ $stockIns->lastPage() }}</p>
                 </div>
                 <div class="flex items-center gap-2">
-                    {{-- ប៊ូតុង ថយក្រោយ (Previous) --}}
                     @if ($stockIns->onFirstPage())
                         <button disabled
                             class="flex items-center gap-1.5 cursor-not-allowed rounded-lg border px-3 py-1.5 text-sm font-medium
