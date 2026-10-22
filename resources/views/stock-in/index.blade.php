@@ -62,7 +62,7 @@
                             Transactions
                         </p>
                         <p class="mt-2 text-3xl font-bold text-slate-900">
-                            {{ $stockIns->count() }}
+                            {{ $totalTransaction }}
                         </p>
                     </div>
                     <div

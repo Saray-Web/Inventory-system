@@ -100,9 +100,9 @@
                             <!-- Description -->
                             <div class="space-y-1.5">
                                 <label class="text-sm font-medium text-slate-700">Description</label>
-                                <textarea name="description" {{ old('description', $product->description) }} rows="4"
+                                <textarea name="description" rows="4"
                                     placeholder="Enter product details, materials, and dimensions..."
-                                    class="w-full rounded-lg border border-slate-200 bg-white p-3.5 text-sm text-slate-800 placeholder-slate-400 shadow-sm transition-colors focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"></textarea>
+                                    class="w-full rounded-lg border border-slate-200 bg-white p-3.5 text-sm text-slate-800 placeholder-slate-400 shadow-sm transition-colors focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20">{{ old('description', $product->description) }}</textarea>
                             </div>
                         </div>
                     </div>

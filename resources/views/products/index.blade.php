@@ -34,7 +34,6 @@
         {{-- ===== Filter / toolbar card ===== --}}
         <div class="bg-white rounded-xl border border-slate-200 shadow-sm mb-5">
             <form action="{{ route('product.index') }}" method="GET" class="flex flex-wrap items-center gap-3 p-4">
-
                 <label class="relative flex-1 min-w-[220px]">
                     <i data-lucide="search" class="w-4 h-4 absolute inset-y-0 left-3 my-auto text-slate-400"></i>
                     <input type="search" placeholder="Search by name or SKU..."

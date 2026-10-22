@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Product;
 use App\Models\StockIn;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class StockInController extends Controller
 {
@@ -12,11 +13,12 @@ class StockInController extends Controller
      * Display a listing of the resource.
      */
     public function index()
-    {
+    {   
+        $totalTransaction = StockIn::count();
         $stockIns = StockIn::with('product')->latest()->paginate(5);
 
         $latestStockIn = StockIn::with('product')->get()->first();
-        return view('stock-in.index', compact('stockIns', 'latestStockIn'));
+        return view('stock-in.index', compact('stockIns', 'latestStockIn', 'totalTransaction'));
     }
 
     /**
@@ -38,37 +40,55 @@ class StockInController extends Controller
             'quantity' => 'required|integer|min:1',
             'note' => 'nullable|string'
         ]);
+        DB::transaction(function () use ($request) {
+            $referenceNo = $this->generateReferenceNo();
 
-        $referenceNo = $this->generateReferenceNo();
-        
-        StockIn::create([
-            'product_id' => $request->product_id,
-            'quantity' => $request->quantity,
-            'note' => $request->note,
-            'reference_no' => $referenceNo,
-        ]);
-        $product = Product::findOrFail($request->product_id);
-        $product->increment('quantity', $request->quantity);
+            StockIn::create([
+                'product_id' => $request->product_id,
+                'quantity' => $request->quantity,
+                'note' => $request->note,
+                'reference_no' => $referenceNo,
+            ]);
+            $product = Product::findOrFail($request->product_id);
+            $product->increment('quantity', $request->quantity);
+        });
+            
         return redirect()->route('stockIn.index')->with('success', 'Created stock successfull');
     }
     
     private function generateReferenceNo()
     {
-        $date = now()->format('Ymd');
-        $prefix = 'SI-' . $date . '-';
+        $referenceDate = now();
+        $date = $referenceDate->toDateString();
 
-        $latest = StockIn::where('reference_no', 'LIKE', $prefix . '%')
-            ->latest('id')
+        DB::table('reference_sequences')->insertOrIgnore([
+            'type' => 'SI',
+            'reference_date' => $date,
+            'last_value' => 0,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $sequence = DB::table('reference_sequences')
+            ->where('type', 'SI')
+            ->where('reference_date', $date)
+            ->lockForUpdate()
             ->first();
 
-        if (!$latest) {
-            return $prefix . '0001';
-        }
+        $latestReference = StockIn::where('reference_no', 'like', 'SI-' . $referenceDate->format('Ymd') . '-%')
+            ->orderByDesc('reference_no')
+            ->value('reference_no');
+        $latestValue = $latestReference ? (int) substr($latestReference, strrpos($latestReference, '-') + 1) : 0;
+        $nextValue = max($sequence->last_value, $latestValue) + 1;
 
-        $sequence = (int) substr($latest->reference_no, -4);
-        $nextSequence = str_pad($sequence + 1, 4, '0', STR_PAD_LEFT);
+        DB::table('reference_sequences')
+            ->where('id', $sequence->id)
+            ->update([
+                'last_value' => $nextValue,
+                'updated_at' => now(),
+            ]);
 
-        return $prefix . $nextSequence;
+        return 'SI-' . $referenceDate->format('Ymd') . '-' . str_pad($nextValue, 4, '0', STR_PAD_LEFT);
     }
 
     /**

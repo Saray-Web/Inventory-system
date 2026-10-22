@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Product;
 use App\Models\StockOut;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class StockOutController extends Controller
 {
@@ -54,57 +55,88 @@ class StockOutController extends Controller
     /**
      * Store a newly created resource in storage.
      */
+    
+
+    
     public function store(Request $request)
     {
         $request->validate([
             'product_id' => 'required|exists:products,id',
             'quantity' => 'required|integer|min:1',
-            'note' => 'nullable|string'
+            'note' => 'nullable|string',
         ]);
 
-        $product = Product::findOrFail($request->product_id);
-        // Check stock before stock out
-        if ($request->quantity > $product->quantity) {
-            return back()
-                ->withInput()
-                ->withErrors([
-                    'quantity' => 'Stock មិនគ្រប់គ្រាន់។ Available stock: ' . $product->quantity,
+        $referenceNo = DB::transaction(function () use ($request) {
+
+            $product = Product::whereKey($request->product_id)
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            // Check stock before stock out
+            if ($request->quantity > $product->quantity) {
+                throw \Illuminate\Validation\ValidationException::withMessages([
+                    'quantity' => 'Stock មិនគ្រប់គ្រាន់។ Available stock: '
+                        . $product->quantity,
                 ]);
-        }
-        $referenceNo = $this->generateReferenceNo();
-        // Create stock out record
-        StockOut::create([
-            'reference_no' => $referenceNo,
-            'product_id' => $request->product_id,
-            'quantity' => $request->quantity,
-            'note' => $request->note,
-        ]);
+            }
 
-        // Decrease product quantity
-        $product->decrement('quantity', $request->quantity);
+            $referenceNo = $this->generateReferenceNo();
+
+            // Create stock out record
+            StockOut::create([
+                'reference_no' => $referenceNo,
+                'product_id' => $product->id,
+                'quantity' => $request->quantity,
+                'note' => $request->note,
+            ]);
+
+            // Decrease product quantity
+            $product->decrement('quantity', $request->quantity);
+
+            return $referenceNo;
+        });
 
         return redirect()
             ->route('stockOut.index')
-            ->with('success', 'Stock Out created successfully with Ref: ' . $referenceNo);
+            ->with(
+                'success',
+                'Stock Out created successfully with Ref: ' . $referenceNo
+            );
     }
-
+    
     private function generateReferenceNo()
     {
-        $date = now()->format('Ymd');
-        $prefix = 'SO-' . $date . '-';
+        $referenceDate = now();
+        $date = $referenceDate->toDateString();
 
-        $latest = StockOut::where('reference_no', 'LIKE', $prefix . '%')
-            ->latest('id')
+        DB::table('reference_sequences')->insertOrIgnore([
+            'type' => 'SO',
+            'reference_date' => $date,
+            'last_value' => 0,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $sequence = DB::table('reference_sequences')
+            ->where('type', 'SO')
+            ->where('reference_date', $date)
+            ->lockForUpdate()
             ->first();
 
-        if (!$latest) {
-            return $prefix . '0001';
-        }
+        $latestReference = StockOut::where('reference_no', 'like', 'SO-' . $referenceDate->format('Ymd') . '-%')
+            ->orderByDesc('reference_no')
+            ->value('reference_no');
+        $latestValue = $latestReference ? (int) substr($latestReference, strrpos($latestReference, '-') + 1) : 0;
+        $nextValue = max($sequence->last_value, $latestValue) + 1;
 
-        $sequence = (int) substr($latest->reference_no, -4);
-        $nextSequence = str_pad($sequence + 1, 4, '0', STR_PAD_LEFT);
+        DB::table('reference_sequences')
+            ->where('id', $sequence->id)
+            ->update([
+                'last_value' => $nextValue,
+                'updated_at' => now(),
+            ]);
 
-        return $prefix . $nextSequence;
+        return 'SO-' . $referenceDate->format('Ymd') . '-' . str_pad($nextValue, 4, '0', STR_PAD_LEFT);
     }
 
     /**
