@@ -69,135 +69,96 @@
             </form>
         </div>
 
-        {{-- ===== Product table ===== --}}
-        <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-            <div class="overflow-x-auto">
-                <table class="w-full text-left border-collapse min-w-[700px] ">
-                    <thead class="bg-slate-50 text-slate-500 uppercase text-sm tracking-wide border-b border-slate-200">
-                        <tr>
-                            <th class="px-6 py-3 font-medium">#</th>
-                            <th class="px-6 py-3 font-medium">Image</th>
-                            <th class="px-6 py-3 font-medium">Product</th>
-                            <th class="px-6 py-3 font-medium">SKU</th>
-                            <th class="px-6 py-3 font-medium">Category</th>
-                            <th class="px-7 py-3 font-medium ">Stock</th>
-                            <th class="px-6 py-3 font-medium ">Price</th>
-                            <th class="px-6 py-3 font-medium ">status</th>
-                            <th class="px-6 py-3 font-medium item-center">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-slate-100">
+        {{-- ===== Product cards ===== --}}
+        <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-4">
+            @forelse ($products as $product)
+                @php
+                    if ($product->quantity === 0) {
+                        $stockLabel = 'Out of Stock';
+                        $stockClass = 'border-red-200 bg-red-50 text-red-700';
+                        $stockIconClass = 'text-red-500';
+                    } elseif ($product->quantity <= $product->minimum_stock) {
+                        $stockLabel = 'Low Stock';
+                        $stockClass = 'border-amber-200 bg-amber-50 text-amber-700';
+                        $stockIconClass = 'text-amber-500';
+                    } else {
+                        $stockLabel = 'In Stock';
+                        $stockClass = 'border-emerald-200 bg-emerald-50 text-emerald-700';
+                        $stockIconClass = 'text-emerald-500';
+                    }
+                @endphp
 
-                        {{-- Row 1 --}}
-                        @forelse ($products as $product)
-                            <tr class="transition-colors duration-200 lg:hover:bg-green-300/10">
+                <article class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-md">
+                    <div class="relative aspect-[16/9] bg-slate-100">
+                        @if ($product->image)
+                            <img src="{{ $product->image }}" alt="{{ $product->name }}" class="h-full w-full object-cover">
+                        @else
+                            <div class="flex h-full w-full items-center justify-center text-slate-400">
+                                <i data-lucide="image" class="h-12 w-12"></i>
+                            </div>
+                        @endif
 
-                                <td class="px-6 py-3 font-medium font-mono ">
-                                    {{ $products->firstItem() + $loop->index }}
-                                </td>
-                                <td class="px-6 py-3 font-medium font-mono ">
-                                    @if ($product->image)
-                                        <img src="{{ $product->image }}" alt="{{ $product->name }}"
-                                            class="w-10 h-10 rounded-lg object-cover border border-slate-200">
-                                    @else
-                                        <div
-                                            class="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center text-slate-400">
-                                            <i data-lucide="image" class="w-5 h-5"></i>
-                                        </div>
-                                    @endif
-                                </td>
-                                <td class="px-6 py-3 font-medium font-mono ">
-                                    {{ $product->name }}
-                                </td>
-                                <td class="px-6 py-3 text-slate-500 font-mono text-xs">
-                                    {{ $product->sku }}
-                                </td>
-                                <td class="px-6 py-3 text-slate-600">
-                                    {{ $product->category->name }}
-                                </td>
-                                <td class="px-6 py-3 text-slate-700 font-medium">
-                                    <div>
+                        <span class="absolute right-3 top-3 rounded-full px-2.5 py-1 text-xs font-semibold {{ $product->is_active ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-200 text-red-600' }}">
+                            {{ $product->is_active ? 'Active' : 'Inactive' }}
+                        </span>
+                    </div>
 
-                                        @if ($product->quantity == 0)
-                                            <span
-                                                class="inline-flex items-center px-2.5 py-0.5 rounded-full
-                text-xs font-medium bg-red-100 text-red-700">
-                                                Out of Stock
-                                            </span>
-                                        @elseif ($product->quantity <= $product->minimum_stock)
-                                            <span
-                                                class="inline-flex items-center px-2.5 py-0.5 rounded-full
-                text-xs font-medium bg-yellow-100 text-yellow-700">
-                                                Low Stock
-                                            </span>
-                                        @else
-                                            <span
-                                                class="inline-flex items-center px-2.5 py-0.5 rounded-full
-                text-xs font-medium bg-green-100 text-green-700">
-                                                In Stock
-                                            </span>
-                                        @endif
+                    <div class="space-y-4 p-5">
+                        <div>
+                            <div class="flex items-start justify-between gap-3">
+                                <h3 class="line-clamp-1 text-base font-bold text-slate-900">{{ $product->name }}</h3>
+                                <p class="shrink-0 text-base font-bold text-slate-900">${{ number_format($product->price, 2) }}</p>
+                            </div>
+                            <p class="mt-1 font-mono text-xs text-slate-500">{{ $product->sku }}</p>
+                            <p class="mt-2 inline-flex items-center gap-1.5 text-sm text-slate-600">
+                                <i data-lucide="tag" class="h-3.5 w-3.5"></i>
+                                {{ $product->category->name }}
+                            </p>
+                        </div>
 
-                                        <p class="mt-1 text-sm font-semibold px-2.5">
-                                            {{ $product->quantity }}
-                                        </p>
+                        <div class="rounded-xl border px-3.5 py-3 {{ $stockClass }}">
+                            <div class="flex items-center justify-between gap-3">
+                                <span class="inline-flex items-center gap-1.5 text-sm font-semibold">
+                                    <i data-lucide="{{ $product->quantity === 0 ? 'circle-x' : 'package-check' }}" class="h-4 w-4 {{ $stockIconClass }}"></i>
+                                    {{ $stockLabel }}
+                                </span>
+                                <span class="text-sm font-bold">{{ number_format($product->quantity) }} units</span>
+                            </div>
+                            <p class="mt-1 text-xs opacity-80">Minimum stock: {{ number_format($product->minimum_stock) }} units</p>
+                        </div>
 
-                                    </div>
-                                </td>
-                                <td class="px-6 py-3  text-slate-700">
-                                    $ {{ $product->price }}
-                                </td>
-                                <td class="px-6 py-3 text-slate-700">
-                                    @if ($product->is_active)
-                                        <span
-                                            class="inline-flex items-center px-2.5 py-0.5 rounded-full
-                                        text-xs font-medium bg-green-100 text-green-700">
-                                            Active
-                                        </span>
-                                    @else
-                                        <span
-                                            class="inline-flex items-center px-2.5 py-0.5 rounded-full
-                                        text-xs font-medium bg-slate-100 text-slate-600">
-                                            Inactive
-                                        </span>
-                                    @endif
-                                </td>
+                        <div class="flex items-center justify-between border-t border-slate-100 pt-4">
+                            <span class="text-xs text-slate-400">#{{ $products->firstItem() + $loop->index }}</span>
+                            <div class="flex gap-2">
+                                <a href="{{ route('product.edit', $product) }}"
+                                    class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-blue-200 text-blue-700 transition hover:bg-blue-50"
+                                    aria-label="Edit {{ $product->name }}">
+                                    <i data-lucide="square-pen" class="h-4 w-4"></i>
+                                </a>
+                                <form action="{{ route('product.destroy', $product) }}" method="POST"
+                                    onsubmit="return confirm('Are you sure you want to remove this product?')">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit"
+                                        class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-amber-200 text-amber-700 transition hover:bg-amber-50"
+                                        aria-label="Deactivate or remove {{ $product->name }}">
+                                        <i data-lucide="archive" class="h-4 w-4"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </article>
+            @empty
+                <div class="col-span-full rounded-xl border border-dashed border-slate-300 bg-white px-6 py-12 text-center text-slate-500">
+                    <i data-lucide="package-search" class="mx-auto mb-3 h-10 w-10 text-slate-400"></i>
+                    No products found.
+                </div>
+            @endforelse
+        </div>
 
-                                <td class="px-6 py-3 ">
-                                    <div class="flex   gap-1">
-                                        <a href="{{ route('product.edit', $product) }}"
-                                            class="inline-flex items-center justify-center w-9 h-9 border border-gray-200 text-blue-700 rounded-md
-                                                hover:bg-blue-100 transition">
-                                            <i data-lucide="SquarePen" class="w-4 h-4"></i>
-                                        </a>
-                                        <form action="{{ route('product.destroy', $product) }}" method="POST"
-                                            onsubmit="return confirm('Are you sure you want to remove this product?')">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit"
-                                                class="inline-flex items-center justify-center w-9 h-9
-                                                    border border-amber-100 text-amber-600 rounded-md
-                                                    hover:bg-amber-50 transition">
-                                                <i data-lucide="archive" class="w-4 h-4"></i>
-                                            </button>
-                                        </form>
-
-                                    </div>
-                                </td>
-                            </tr>
-                        @empty
-                            <tr>
-                                <td colspan="9" class="px-6 py-8 text-center text-slate-400">
-                                    No products found.
-                                </td>
-                            </tr>
-                        @endforelse
-
-                    </tbody>
-                </table>
-            </div>
-
-            {{-- Pagination --}}
+        {{-- Pagination --}}
+        <div class="mt-5 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
             <div class="flex border-t border-slate-200 px-6 py-4 justify-between">
                 <div>
                     <p> Page {{ $products->currentPage() }} of {{ $products->lastPage() }}</p>

@@ -47,12 +47,13 @@
                                 <!-- SKU -->
                                 <div class="space-y-1.5">
                                     <label class="text-sm font-medium text-slate-700">SKU</label>
-                                    <input type="text" name="sku" placeholder="e.g. ACC-BAG-001"
+                                    <input type="text" name="sku" placeholder="e.g. ACC-BAG-001" readonly
                                         value="{{ old('sku', $product->sku) }}"
-                                        class="w-full rounded-lg border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-800 placeholder-slate-400 shadow-sm transition-colors focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20
+                                        class="w-full cursor-not-allowed rounded-lg border border-slate-200 bg-slate-100 px-3.5 py-2.5 font-mono text-sm text-slate-600 placeholder-slate-400 shadow-sm
                                             @error('sku')
                                             !border-red-400 focus:border-red-500 focus:ring-red-100
                                             @enderror">
+                                    <p class="text-xs text-slate-500">SKU is generated when the product is created and cannot be changed.</p>
                                     @error('sku')
                                         <p class="flex items-center gap-1 mt-2 text-xs text-red-600">
                                             <i data-lucide="circle-alert" class="w-3.5 h-3.5"></i>
@@ -181,10 +182,15 @@
                                 <p class="text-sm font-medium text-slate-700">
                                     <span class="text-indigo-600 font-semibold">Upload a file</span> or drag and drop
                                 </p>
-                                <p class="mt-1 text-xs text-slate-400">PNG, JPG, GIF up to 10MB</p>
                             </div>
 
-                            <input type="file" name="image" id="imageInput" accept="image/*"
+                            <div class="relative z-10 mt-3 space-y-1 text-xs text-slate-500 pointer-events-none">
+                                <p>JPG, PNG, or WEBP up to 5MB</p>
+                                <p>Recommended: 1200 × 1200px (minimum 600 × 600px)</p>
+                                <p id="imageFileNote" class="font-medium">Optional: no new file selected.</p>
+                            </div>
+
+                            <input type="file" name="image" id="imageInput" accept=".jpg,.jpeg,.png,.webp"
                                 class="absolute inset-0 cursor-pointer opacity-0" onchange="previewImage(event)">
                         </div>
                     </div>
@@ -219,8 +225,10 @@
             const input = event.target;
             const preview = document.getElementById('imagePreview');
             const prompt = document.getElementById('uploadPrompt');
+            const fileNote = document.getElementById('imageFileNote');
 
             if (input.files && input.files[0]) {
+                fileNote.textContent = `Selected: ${input.files[0].name}`;
                 const reader = new FileReader();
                 reader.onload = function(e) {
                     preview.src = e.target.result;

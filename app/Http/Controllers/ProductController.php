@@ -6,6 +6,8 @@ use App\Models\Product;
 use App\Models\Category;
 use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 class ProductController extends Controller
 {
@@ -44,11 +46,10 @@ class ProductController extends Controller
         $request->validate([
             'category_id' => 'required|exists:categories,id',
             'name' => 'required|string|max:255',
-            'sku' => 'required|string|max:255|unique:products,sku',
             'price' => 'required|numeric|min:0',
             'minimum_stock' => 'required|integer|min:0',
             'description' => 'nullable|string',
-            'image' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+            'image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120|dimensions:min_width=600,min_height=600',
         ]);
 
         $imageUrl = null;
@@ -64,17 +65,19 @@ class ProductController extends Controller
             $publicId = $upload['public_id'];
         }
 
-        Product::create([
-            'category_id' => $request->category_id,
-            'name' => $request->name,
-            'sku' => $request->sku,
-            'price' => $request->price,
-            'quantity' => 0,
-            'minimum_stock' => $request->minimum_stock,
-            'description' => $request->description,
-            'image' => $imageUrl,
-            'image_public_id' => $publicId,
-        ]);
+        DB::transaction(function () use ($request, $imageUrl, $publicId) {
+            Product::create([
+                'category_id' => $request->category_id,
+                'name' => $request->name,
+                'sku' => $this->generateSku($request->name),
+                'price' => $request->price,
+                'quantity' => 0,
+                'minimum_stock' => $request->minimum_stock,
+                'description' => $request->description,
+                'image' => $imageUrl,
+                'image_public_id' => $publicId,
+            ]);
+        });
         return redirect()->route('product.index')->with('success', 'Created products success');
     }
     /**
@@ -102,11 +105,10 @@ class ProductController extends Controller
         $request->validate([
             'category_id' => 'required|exists:categories,id',
             'name' => 'required|string|max:255',
-            'sku' => 'required|string|max:255|unique:products,sku,' . $product->id,
             'price' => 'required|numeric|min:0',
             'minimum_stock' => 'required|integer|min:0',
             'description' => 'nullable|string',
-            'image' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+            'image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120|dimensions:min_width=600,min_height=600',
         ]);
 
         $imageUrl = $product->image;
@@ -132,7 +134,6 @@ class ProductController extends Controller
         $product->update([
             'category_id' => $request->category_id,
             'name' => $request->name,
-            'sku' => $request->sku,
             'price' => $request->price,
             'minimum_stock' => $request->minimum_stock,
             'description' => $request->description,
@@ -141,6 +142,40 @@ class ProductController extends Controller
 
         ]);
         return redirect()->route('product.index')->with('success', 'Updated product successfull');
+    }
+
+    private function generateSku(string $name): string
+    {
+        $letters = preg_replace('/[^A-Za-z0-9]/', '', Str::ascii($name));
+        $prefix = Str::upper(Str::substr($letters, 0, 2));
+        $prefix = strlen($prefix) === 2 ? $prefix : 'PR';
+
+        DB::table('product_sku_sequences')->insertOrIgnore([
+            'prefix' => $prefix,
+            'last_value' => 0,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $sequence = DB::table('product_sku_sequences')
+            ->where('prefix', $prefix)
+            ->lockForUpdate()
+            ->first();
+
+        $latestSku = Product::where('sku', 'like', $prefix . '-%')
+            ->orderByDesc('sku')
+            ->value('sku');
+        $latestValue = $latestSku ? (int) substr($latestSku, strrpos($latestSku, '-') + 1) : 0;
+        $nextValue = max($sequence->last_value, $latestValue) + 1;
+
+        DB::table('product_sku_sequences')
+            ->where('id', $sequence->id)
+            ->update([
+                'last_value' => $nextValue,
+                'updated_at' => now(),
+            ]);
+
+        return $prefix . '-' . str_pad($nextValue, 4, '0', STR_PAD_LEFT);
     }
 
     /**

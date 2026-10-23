@@ -48,18 +48,12 @@
                             <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                                 <!-- 2. SKU -->
                                 <div class="space-y-1.5">
-                                    <label for="sku" class="text-sm font-medium text-slate-700">
-                                        SKU <span class="text-rose-500">*</span>
+                                    <label for="skuPreview" class="text-sm font-medium text-slate-700">
+                                        SKU
                                     </label>
-                                    <input type="text" id="sku" name="sku" value="{{ old('sku') }}" placeholder="e.g. ACC-BAG-001"
-                                        class="w-full rounded-lg border px-3.5 py-2.5 text-sm uppercase text-slate-800 placeholder-slate-400 shadow-sm outline-none transition
-                                        @error('sku') border-rose-400 focus:border-rose-500 focus:ring-2 focus:ring-rose-100 @else border-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 @enderror">
-                                    @error('sku')
-                                        <p class="mt-1 flex items-center gap-1.5 text-xs text-rose-600">
-                                            <i data-lucide="circle-alert" class="h-3.5 w-3.5"></i>
-                                            {{ $message }}
-                                        </p>
-                                    @enderror
+                                    <input type="text" id="skuPreview" value="Auto-generated when saved" readonly
+                                        class="w-full cursor-not-allowed rounded-lg border border-slate-200 bg-slate-100 px-3.5 py-2.5 font-mono text-sm text-slate-600 shadow-sm outline-none">
+                                    <p class="text-xs text-slate-500">Generated from the first two letters of the product name.</p>
                                 </div>
 
                                 <!-- 3. Category -->
@@ -169,10 +163,15 @@
                                 <p class="text-sm font-medium text-slate-700">
                                     <span class="font-semibold text-indigo-600">Upload a file</span> or drag and drop
                                 </p>
-                                <p class="mt-1 text-xs text-slate-400">PNG, JPG, GIF up to 10MB</p>
                             </div>
 
-                            <input required type="file" id="imageInput" name="image" accept="image/*" class="absolute inset-0 cursor-pointer opacity-0" onchange="previewImage(event)">
+                            <div class="relative z-10 mt-3 space-y-1 text-xs text-slate-500 pointer-events-none">
+                                <p>JPG, PNG, or WEBP up to 5MB</p>
+                                <p>Recommended: 1200 × 1200px (minimum 600 × 600px)</p>
+                                <p id="imageFileNote" class="font-medium">Optional: no file selected.</p>
+                            </div>
+
+                            <input type="file" id="imageInput" name="image" accept=".jpg,.jpeg,.png,.webp" class="absolute inset-0 cursor-pointer opacity-0" onchange="previewImage(event)">
                         </div>
 
                         @error('image')
@@ -207,8 +206,10 @@
             const input = event.target;
             const preview = document.getElementById('imagePreview');
             const prompt = document.getElementById('uploadPrompt');
+            const fileNote = document.getElementById('imageFileNote');
 
             if (input.files && input.files[0]) {
+                fileNote.textContent = `Selected: ${input.files[0].name}`;
                 const reader = new FileReader();
                 reader.onload = function(e) {
                     preview.src = e.target.result;
@@ -218,5 +219,12 @@
                 reader.readAsDataURL(input.files[0]);
             }
         }
+
+        document.getElementById('name').addEventListener('input', function(event) {
+            const letters = event.target.value.replace(/[^a-z0-9]/gi, '').toUpperCase();
+            const prefix = letters.length >= 2 ? letters.slice(0, 2) : 'PR';
+
+            document.getElementById('skuPreview').value = `${prefix}-XXXX (generated when saved)`;
+        });
     </script>
 @endsection
