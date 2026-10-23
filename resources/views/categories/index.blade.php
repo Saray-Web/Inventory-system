@@ -14,6 +14,20 @@
 
         </div>
     @endif
+    @if (session('error'))
+        <div
+            class="mb-5 flex items-center gap-3
+                rounded-lg border border-green-200
+                bg-green-50 px-4 py-3 text-sm text-red-700">
+
+            <i data-lucide="circle-x" class="w-5 h-5"></i>
+
+            <span>
+                {{ session('error') }}
+            </span>
+
+        </div>
+    @endif
     <div class="space-y-8">
         <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <div>

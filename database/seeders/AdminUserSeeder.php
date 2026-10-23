@@ -3,7 +3,6 @@
 namespace Database\Seeders;
 
 use App\Models\User;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 
@@ -14,10 +13,20 @@ class AdminUserSeeder extends Seeder
      */
     public function run(): void
     {
-        User::create([
-            'name' => 'AdminGenZ',
-            'email' => 'phanha@gmail.com',
-            'password' => Hash::make('712794'),
-        ]);
+        $name = env('ADMIN_NAME');
+        $email = env('ADMIN_EMAIL');
+        $password = env('ADMIN_PASSWORD');
+        if(empty($name) || empty($email) || empty($password)){
+            throw new \RuntimeException('ADMIN_NAME , ADMIN_EMAIL , ADMIN_PASSWORD must be set in .env');
+        }
+        User::firstOrCreate(
+            [
+                'name' => $name
+            ],
+            [
+                'email' => $email,
+                'password' => Hash::make($password),
+            ]
+        );
     }
 }

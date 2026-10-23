@@ -78,15 +78,16 @@ class CategoryController extends Controller
             'description' => $request->description,
             'is_active' => $request->is_active
         ]);
-
         return redirect()->route('categories.index')->with('success', 'Updated successfull');
     }
-
     /**
      * Remove the specified resource from storage.
      */
     public function destroy(Category $category)
     {
+        if($category->products()->exists()){
+            return redirect()->route('categories.index')->with('error', 'Cannot delete this category because it has products. Please deactivate it instead.');
+        }
         $category->delete();
         return redirect()->route('categories.index')->with('success', 'Deleted successfull');
     }

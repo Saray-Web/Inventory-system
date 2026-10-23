@@ -6,6 +6,7 @@ use App\Models\Product;
 use App\Models\StockIn;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 
 class StockInController extends Controller
 {
@@ -26,7 +27,9 @@ class StockInController extends Controller
      */
     public function create()
     {
-        $products = Product::orderBy('name')->get();
+        $products = Product::where('is_active', true)
+            ->orderBy('name')
+            ->get();
         return view('stock-in.create', compact('products'));
     }
 
@@ -36,7 +39,10 @@ class StockInController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'product_id' => 'required|exists:products,id',
+            'product_id' => [
+                'required',
+                Rule::exists('products', 'id')->where('is_active', true),
+            ],
             'quantity' => 'required|integer|min:1',
             'note' => 'nullable|string'
         ]);
